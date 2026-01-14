@@ -1,0 +1,373 @@
+import { useState, useMemo } from "react";
+import { Header } from "@/components/layout/Header";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import {
+  Zap,
+  Mail,
+  Clock,
+  Calendar,
+  Plus,
+  Play,
+  Pause,
+  Loader2,
+  Sparkles,
+  User,
+  Eye,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { CreateAutomationDialog } from "@/components/dialogs/CreateAutomationDialog";
+import { AISummaryDialog } from "@/components/dialogs/AISummaryDialog";
+import { useAutomations, useUpdateAutomation } from "@/hooks/useAutomations";
+import { useExecuteAutomation } from "@/hooks/useExecuteAutomation";
+import { useLatestAutomationRun } from "@/hooks/useAutomationRuns";
+import { useClients } from "@/hooks/useClients";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const actionLabels: Record<string, string> = {
+  "email": "Send email",
+  "meeting": "Send meeting follow-up",
+  "ai-summary": "Generate AI summary",
+};
+
+export default function Automations() {
+  const [createAutomationOpen, setCreateAutomationOpen] = useState(false);
+  const { data: automations = [], isLoading } = useAutomations();
+  const updateAutomation = useUpdateAutomation();
+  const executeAutomation = useExecuteAutomation();
+
+  // Separate automations by type
+  const { aiSummaries, otherAutomations } = useMemo(() => {
+    const aiSummaries = automations.filter(
+      (auto) => auto.action_type === "ai-summary"
+    );
+    const otherAutomations = automations.filter(
+      (auto) => auto.action_type !== "ai-summary"
+    );
+    return { aiSummaries, otherAutomations };
+  }, [automations]);
+
+  const toggleAutomation = (id: string, currentValue: boolean) => {
+    updateAutomation.mutate({ id, is_active: !currentValue });
+  };
+
+  const handleExecute = (automation: any) => {
+    executeAutomation.mutate(
+      { automation },
+      {
+        onSuccess: () => {
+          // Force refetch of automation runs after execution
+          // This will be handled by the query invalidation in useExecuteAutomation
+        },
+      }
+    );
+  };
+
+  // Component for AI Summary cards (needs to be separate to use hooks)
+  const AISummaryCard = ({ automation, index }: { automation: any; index: number }) => {
+    const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+    const [isExecutingThis, setIsExecutingThis] = useState(false);
+    // Use automation_id if available, otherwise fall back to id
+    const automationId = automation.automation_id || automation.id;
+    const { data: latestRun, isLoading: isLoadingRun } = useLatestAutomationRun(automationId);
+    const { data: clients = [] } = useClients();
+    const clientId = automation.config?.client_id;
+    const client = clients.find((c) => c.id === clientId || (c as any).client_id === clientId);
+    const summary = latestRun?.result_data?.summary;
+    const clientName = latestRun?.result_data?.clientName || client?.name || "Unknown Client";
+    const summaryData = latestRun?.result_data;
+    
+    // Create a separate execute mutation for this specific automation
+    const executeThisAutomation = useExecuteAutomation();
+    
+    // Debug logging
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[AISummaryCard] Automation:`, {
+        id: automation.id,
+        automation_id: automation.automation_id,
+        automationId,
+        latestRun: latestRun ? {
+          id: latestRun.id,
+          status: latestRun.automation_status,
+          hasResultData: !!latestRun.result_data,
+          resultDataType: typeof latestRun.result_data,
+          summary: latestRun.result_data?.summary?.substring(0, 50) + '...',
+        } : null,
+        isLoadingRun,
+      });
+    }
+    
+    // Debug: Check if summary exists
+    const hasSummary = summary && typeof summary === 'string' && summary.trim().length > 0;
+
+    return (
+      <div
+        className="rounded-xl bg-card border border-border p-5 shadow-card animate-slide-up"
+        style={{ animationDelay: `${index * 100}ms` }}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-4 flex-1">
+            <div
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-lg",
+                automation.is_active ? "bg-primary/10" : "bg-muted"
+              )}
+            >
+              {automation.is_active ? (
+                <Sparkles className="h-5 w-5 text-primary" />
+              ) : (
+                <Sparkles className="h-5 w-5 text-muted-foreground" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium text-foreground">{automation.name}</h3>
+              </div>
+              {automation.description && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  {automation.description}
+                </p>
+              )}
+              
+              {/* Client Info */}
+              <div className="flex items-center gap-2 mt-3">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">
+                  Client: {clientName}
+                </span>
+              </div>
+
+              {/* Summary Preview */}
+              {hasSummary ? (
+                <>
+                  <div className="mt-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                    <p className="text-xs font-medium text-primary mb-2">Latest Summary:</p>
+                    <p className="text-sm text-foreground line-clamp-3">
+                      {summary}
+                    </p>
+                  </div>
+                  {/* View More Button */}
+                  <div className="mt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSummaryDialogOpen(true)}
+                      className="gap-2"
+                    >
+                      <Eye className="h-4 w-4" />
+                      Ver más
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                    <p className="text-xs text-muted-foreground">
+                      No summary generated yet.
+                    </p>
+                  </div>
+                  {/* Generate Summary Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setIsExecutingThis(true);
+                      executeThisAutomation.mutate(
+                        { automation },
+                        {
+                          onSuccess: () => {
+                            setIsExecutingThis(false);
+                            // Force refetch after a short delay to ensure data is available
+                            setTimeout(() => {
+                              // The query will be invalidated by useExecuteAutomation
+                              // This just ensures we refetch after the delay
+                            }, 1000);
+                          },
+                          onError: () => {
+                            setIsExecutingThis(false);
+                          },
+                        }
+                      );
+                    }}
+                    disabled={!automation.is_active || isExecutingThis}
+                    className="gap-2 w-full"
+                  >
+                    {isExecutingThis ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        Generate Summary
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Summary Dialog */}
+        <AISummaryDialog
+          open={summaryDialogOpen}
+          onOpenChange={setSummaryDialogOpen}
+          automation={automation}
+          summaryData={summaryData}
+          clientName={clientName}
+        />
+      </div>
+    );
+  };
+
+  const renderAutomationCard = (automation: any, index: number) => (
+    <div
+      key={automation.id}
+      className="rounded-xl bg-card border border-border p-5 shadow-card animate-slide-up"
+      style={{ animationDelay: `${index * 100}ms` }}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div
+            className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-lg",
+              automation.is_active ? "bg-primary/10" : "bg-muted"
+            )}
+          >
+            {automation.is_active ? (
+              <Play className="h-5 w-5 text-primary" />
+            ) : (
+              <Pause className="h-5 w-5 text-muted-foreground" />
+            )}
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="font-medium text-foreground">{automation.name}</h3>
+            </div>
+            {automation.description && (
+              <p className="text-sm text-muted-foreground mt-1">
+                {automation.description}
+              </p>
+            )}
+            <div className="flex flex-wrap gap-2 mt-3">
+              <span className="inline-flex items-center px-2 py-1 rounded-md bg-secondary text-xs text-muted-foreground">
+                {actionLabels[automation.action_type] || automation.action_type}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleExecute(automation)}
+            disabled={!automation.is_active || executeAutomation.isPending}
+            className="gap-2"
+          >
+            {executeAutomation.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Running...
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4" />
+                Run Now
+              </>
+            )}
+          </Button>
+          <Switch
+            checked={automation.is_active || false}
+            onCheckedChange={() =>
+              toggleAutomation(automation.id, automation.is_active || false)
+            }
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen">
+      <Header title="Automations" subtitle="Automate your workflow with AI-powered actions" />
+
+      <div className="p-6 space-y-8">
+        {/* Header with Create Button */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Automations</h2>
+            <p className="text-sm text-muted-foreground">Manage your automated workflows</p>
+          </div>
+          <Button className="gap-2" onClick={() => setCreateAutomationOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Create Custom
+          </Button>
+          <CreateAutomationDialog open={createAutomationOpen} onOpenChange={setCreateAutomationOpen} />
+        </div>
+
+        {/* Email & Communication Automations Section */}
+        <section>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+              <Zap className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Email & Communication Automations</h2>
+              <p className="text-sm text-muted-foreground">Automated emails and meeting follow-ups</p>
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 w-full" />
+              ))
+            ) : otherAutomations.length === 0 ? (
+              <div className="rounded-xl bg-card border border-border p-8 text-center text-muted-foreground">
+                <Mail className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+                <p>No email automations yet.</p>
+                <p className="text-xs mt-1">Create email or meeting follow-up automations</p>
+              </div>
+            ) : (
+              otherAutomations.map((automation, index) => renderAutomationCard(automation, index))
+            )}
+          </div>
+        </section>
+
+        {/* AI Client Summary Section */}
+        <section>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <Sparkles className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">AI Client Summaries</h2>
+              <p className="text-sm text-muted-foreground">Generate AI-powered summaries for your clients</p>
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            {isLoading ? (
+              Array.from({ length: 2 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 w-full" />
+              ))
+            ) : aiSummaries.length === 0 ? (
+              <div className="rounded-xl bg-card border border-border p-8 text-center text-muted-foreground">
+                <Sparkles className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+                <p>No AI Client Summary automations yet.</p>
+                <p className="text-xs mt-1">Create one to generate intelligent client insights</p>
+              </div>
+            ) : (
+              aiSummaries.map((automation, index) => (
+                <AISummaryCard key={automation.id} automation={automation} index={index} />
+              ))
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
