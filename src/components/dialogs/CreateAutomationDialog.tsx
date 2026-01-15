@@ -39,7 +39,6 @@ const actionTypes: Array<{
   description: string;
 }> = [
   { value: "email", label: "Email", icon: Mail, description: "Send an automated email" },
-  { value: "meeting", label: "Meeting Follow-up", icon: Calendar, description: "Send meeting follow-up email" },
   { value: "ai-summary", label: "AI Client Summary", icon: Zap, description: "Generate AI summary for a client" },
 ];
 
@@ -93,20 +92,20 @@ export function CreateAutomationDialog({ open, onOpenChange }: CreateAutomationD
     // Validate action-specific required fields
     switch (actionType) {
       case "email":
-        if (!formData.emailMessage || !formData.emailSendDate) {
+        if (!formData.emailMessage || !formData.emailSendDate || !formData.selectedClientId) {
           toast({
             title: "Required fields missing",
-            description: "Please fill in Custom message and Date of sending for Email action.",
+            description: "Please fill in Custom message, Date of sending, and select a client for Email action.",
             variant: "destructive",
           });
           return false;
         }
         break;
       case "meeting":
-        if (!formData.meetingName || !formData.meetingEmailContent) {
+        if (!formData.meetingName || !formData.meetingEmailContent || !formData.selectedClientId) {
           toast({
             title: "Required fields missing",
-            description: "Please fill in Meeting name and Email content for Meeting follow-up.",
+            description: "Please fill in Meeting name, Email content, and select a client for Meeting follow-up.",
             variant: "destructive",
           });
           return false;
@@ -140,10 +139,38 @@ export function CreateAutomationDialog({ open, onOpenChange }: CreateAutomationD
       
       if (actionType === "email") {
         config.email_message = formData.emailMessage;
-        config.email_send_date = formData.emailSendDate;
+        // Convertir datetime-local a ISO string en UTC para evitar problemas de zona horaria
+        // datetime-local viene en formato "YYYY-MM-DDTHH:mm" (hora local del navegador)
+        // Necesitamos convertir la hora local del usuario a UTC
+        if (formData.emailSendDate) {
+          // datetime-local da la fecha en la zona horaria local del navegador
+          // new Date() interpreta "YYYY-MM-DDTHH:mm" como hora local
+          // Luego convertimos a UTC con toISOString()
+          const localDate = new Date(formData.emailSendDate);
+          
+          // Verificar que la fecha sea válida
+          if (isNaN(localDate.getTime())) {
+            throw new Error("Invalid date format");
+          }
+          
+          // Convertir a ISO string (UTC) para guardar en la BD
+          // Esto preserva la hora que el usuario seleccionó, pero en UTC
+          config.email_send_date = localDate.toISOString();
+          
+          console.log(`[CreateAutomation] Date conversion:`, {
+            input: formData.emailSendDate,
+            localDate: localDate.toString(),
+            isoString: localDate.toISOString(),
+            timezoneOffset: localDate.getTimezoneOffset(),
+          });
+        } else {
+          config.email_send_date = formData.emailSendDate;
+        }
+        config.client_id = formData.selectedClientId;
       } else if (actionType === "meeting") {
         config.meeting_name = formData.meetingName;
         config.email_content = formData.meetingEmailContent;
+        config.client_id = formData.selectedClientId;
       } else if (actionType === "ai-summary") {
         config.client_id = formData.selectedClientId;
       }
@@ -258,6 +285,33 @@ export function CreateAutomationDialog({ open, onOpenChange }: CreateAutomationD
               {actionType === "email" && (
                 <div className="space-y-4">
                   <div className="space-y-2">
+                    <Label htmlFor="selectedClientEmail">Select Client *</Label>
+                    <Select
+                      value={formData.selectedClientId}
+                      onValueChange={(value) => setFormData({ ...formData, selectedClientId: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a client" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {clients.length === 0 ? (
+                          <SelectItem value="no-clients" disabled>
+                            No clients available
+                          </SelectItem>
+                        ) : (
+                          clients.map((client) => {
+                            const clientId = client.id || (client as any).client_id;
+                            return (
+                              <SelectItem key={clientId} value={clientId}>
+                                {client.name} {client.email ? `(${client.email})` : ""}
+                              </SelectItem>
+                            );
+                          })
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="emailMessage">Custom message to send *</Label>
                     <Textarea
                       id="emailMessage"
@@ -274,31 +328,6 @@ export function CreateAutomationDialog({ open, onOpenChange }: CreateAutomationD
                       type="datetime-local"
                       value={formData.emailSendDate}
                       onChange={(e) => setFormData({ ...formData, emailSendDate: e.target.value })}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Meeting Follow-up Action */}
-              {actionType === "meeting" && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="meetingName">Meeting name *</Label>
-                    <Input
-                      id="meetingName"
-                      placeholder="Quarterly Review Meeting"
-                      value={formData.meetingName}
-                      onChange={(e) => setFormData({ ...formData, meetingName: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="meetingEmailContent">Email content *</Label>
-                    <Textarea
-                      id="meetingEmailContent"
-                      placeholder="Write your meeting follow-up email content here..."
-                      value={formData.meetingEmailContent}
-                      onChange={(e) => setFormData({ ...formData, meetingEmailContent: e.target.value })}
-                      rows={4}
                     />
                   </div>
                 </div>
