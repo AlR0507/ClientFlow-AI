@@ -15,6 +15,9 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [company, setCompany] = useState("");
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -42,15 +45,45 @@ export default function Auth() {
         if (error) throw error;
         toast({ title: "Welcome back!", description: "You have successfully logged in." });
       } else {
+        // URL de redirección después de confirmar el correo
         const redirectUrl = `${window.location.origin}/`;
-        const { error } = await supabase.auth.signUp({
+        
+        // Preparar user_metadata con los datos del perfil
+        const userMetadata: Record<string, any> = {};
+        if (firstName) userMetadata.first_name = firstName;
+        if (lastName) userMetadata.last_name = lastName;
+        if (company) userMetadata.company = company;
+        
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: redirectUrl }
+          options: { 
+            emailRedirectTo: redirectUrl,
+            data: userMetadata // Guardar datos en user_metadata
+          }
         });
-        if (error) throw error;
-        toast({ title: "Account created!", description: "You can now log in." });
-        setIsLogin(true);
+        
+        if (error) {
+          console.error("SignUp error:", error);
+          throw error;
+        }
+        
+        // Verificar si el usuario fue creado correctamente
+        if (data.user) {
+          console.log("User created:", data.user.id);
+          console.log("Email confirmation sent:", data.user.email);
+          
+          // Redirigir a la página de confirmación de correo
+          navigate(`/email-confirmation?email=${encodeURIComponent(email)}`);
+        } else {
+          // Si no hay usuario, podría ser que la confirmación de correo esté deshabilitada
+          // o que haya algún problema con la configuración
+          toast({
+            title: "Account created",
+            description: "Please check your email for the confirmation link.",
+          });
+          navigate(`/email-confirmation?email=${encodeURIComponent(email)}`);
+        }
       }
     } catch (error: any) {
       toast({
@@ -85,6 +118,42 @@ export default function Auth() {
                 required
               />
             </div>
+            {!isLogin && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      type="text"
+                      placeholder="John"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      type="text"
+                      placeholder="Doe"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company</Label>
+                  <Input
+                    id="company"
+                    type="text"
+                    placeholder="Acme Corp"
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input

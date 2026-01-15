@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -100,6 +100,17 @@ export default function Automations() {
     
     // Debug: Check if summary exists
     const hasSummary = summary && typeof summary === 'string' && summary.trim().length > 0;
+    
+    // Monitor when summary becomes available after execution
+    useEffect(() => {
+      if (isExecutingThis && hasSummary) {
+        // Summary is now available, hide the loading banner
+        setIsExecutingThis(false);
+      }
+    }, [isExecutingThis, hasSummary]);
+    
+    // Determine if we should show the loading banner
+    const showLoadingBanner = isExecutingThis || executeThisAutomation.isPending;
 
     return (
       <div
@@ -138,8 +149,23 @@ export default function Automations() {
                 </span>
               </div>
 
+              {/* Loading Banner - Show when generating summary */}
+              {showLoadingBanner && (
+                <div className="mt-3 p-4 rounded-lg bg-primary/10 border border-primary/30">
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    <div>
+                      <p className="text-sm font-medium text-primary">Generating Summary...</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Please wait while we analyze the client data and generate your summary.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Summary Preview */}
-              {hasSummary ? (
+              {!showLoadingBanner && hasSummary && (
                 <>
                   <div className="mt-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
                     <p className="text-xs font-medium text-primary mb-2">Latest Summary:</p>
@@ -160,52 +186,6 @@ export default function Automations() {
                     </Button>
                   </div>
                 </>
-              ) : (
-                <div className="mt-3 space-y-2">
-                  <div className="p-3 rounded-lg bg-muted/50 border border-border">
-                    <p className="text-xs text-muted-foreground">
-                      No summary generated yet.
-                    </p>
-                  </div>
-                  {/* Generate Summary Button */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setIsExecutingThis(true);
-                      executeThisAutomation.mutate(
-                        { automation },
-                        {
-                          onSuccess: () => {
-                            setIsExecutingThis(false);
-                            // Force refetch after a short delay to ensure data is available
-                            setTimeout(() => {
-                              // The query will be invalidated by useExecuteAutomation
-                              // This just ensures we refetch after the delay
-                            }, 1000);
-                          },
-                          onError: () => {
-                            setIsExecutingThis(false);
-                          },
-                        }
-                      );
-                    }}
-                    disabled={!automation.is_active || isExecutingThis}
-                    className="gap-2 w-full"
-                  >
-                    {isExecutingThis ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4" />
-                        Generate Summary
-                      </>
-                    )}
-                  </Button>
-                </div>
               )}
             </div>
           </div>
