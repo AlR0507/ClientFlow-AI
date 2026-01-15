@@ -2,7 +2,6 @@ import { User, DollarSign, Calendar, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useClients } from "@/hooks/useClients";
 import { useDeals } from "@/hooks/useDeals";
-import { useReminders } from "@/hooks/useReminders";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMemo } from "react";
 import { formatDistanceToNow } from "date-fns";
@@ -19,7 +18,6 @@ interface Activity {
 export function RecentActivity() {
   const { data: clients = [], isLoading: clientsLoading } = useClients();
   const { data: deals = [], isLoading: dealsLoading } = useDeals();
-  const { data: reminders = [], isLoading: remindersLoading } = useReminders();
 
   const activities = useMemo(() => {
     const allActivities: Activity[] = [];
@@ -50,21 +48,7 @@ export function RecentActivity() {
         icon: DollarSign,
       }));
 
-    // Upcoming reminders (next 3)
-    const upcomingReminders = [...reminders]
-      .filter((r) => !r.completed)
-      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-      .slice(0, 2)
-      .map((reminder) => ({
-        id: `reminder-${reminder.id}`,
-        type: "reminder_due" as const,
-        description: reminder.title,
-        client: reminder.related_to || "General",
-        time: formatDistanceToNow(new Date(reminder.due_date), { addSuffix: true }),
-        icon: Calendar,
-      }));
-
-    allActivities.push(...recentClients, ...recentDeals, ...upcomingReminders);
+    allActivities.push(...recentClients, ...recentDeals);
 
     // Sort by time (most recent first) and take top 5
     return allActivities
@@ -73,9 +57,9 @@ export function RecentActivity() {
         return 0; // Keep original order since we already sorted by creation date
       })
       .slice(0, 5);
-  }, [clients, deals, reminders]);
+  }, [clients, deals]);
 
-  const isLoading = clientsLoading || dealsLoading || remindersLoading;
+  const isLoading = clientsLoading || dealsLoading;
 
   if (isLoading) {
     return (
