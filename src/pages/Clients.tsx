@@ -61,7 +61,7 @@ export default function Clients() {
           <div className="flex gap-2">
             <Button variant="outline" className="gap-2" onClick={() => setPrioritizationDialogOpen(true)}>
               <Sparkles className="h-4 w-4" />
-              Automatizar Priorización
+              Automate Prioritization
             </Button>
             <Button className="gap-2" onClick={() => setAddClientOpen(true)}>
               <Plus className="h-4 w-4" />
@@ -134,9 +134,16 @@ export default function Clients() {
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-sm">
                             {client.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                           </div>
-                          <div>
+                          <div className="min-w-0 flex-1">
                             <p className="font-medium text-foreground">{client.name}</p>
-                            <p className="text-sm text-muted-foreground">{client.email || "—"}</p>
+                            <p className="text-sm text-muted-foreground truncate">{client.email || "—"}</p>
+                            <p className="text-xs text-muted-foreground truncate mt-1">
+                              {client.notes ? (
+                                <span className="italic">{client.notes.length > 60 ? `${client.notes.substring(0, 60)}...` : client.notes}</span>
+                              ) : (
+                                <span className="text-muted-foreground/60">No description</span>
+                              )}
+                            </p>
                           </div>
                         </div>
                       </td>
@@ -197,7 +204,7 @@ export default function Clients() {
                               }}
                             >
                               <Eye className="mr-2 h-4 w-4" />
-                              Ver más
+                              View More
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

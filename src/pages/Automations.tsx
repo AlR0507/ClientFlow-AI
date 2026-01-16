@@ -15,15 +15,27 @@ import {
   Sparkles,
   User,
   Eye,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CreateAutomationDialog } from "@/components/dialogs/CreateAutomationDialog";
 import { AISummaryDialog } from "@/components/dialogs/AISummaryDialog";
-import { useAutomations, useUpdateAutomation } from "@/hooks/useAutomations";
+import { useAutomations, useUpdateAutomation, useDeleteAutomation } from "@/hooks/useAutomations";
 import { useExecuteAutomation } from "@/hooks/useExecuteAutomation";
 import { useLatestAutomationRun } from "@/hooks/useAutomationRuns";
 import { useClients } from "@/hooks/useClients";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const actionLabels: Record<string, string> = {
   "email": "Send email",
@@ -81,24 +93,7 @@ export default function Automations() {
     // Create a separate execute mutation for this specific automation
     const executeThisAutomation = useExecuteAutomation();
     
-    // Debug logging
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[AISummaryCard] Automation:`, {
-        id: automation.id,
-        automation_id: automation.automation_id,
-        automationId,
-        latestRun: latestRun ? {
-          id: latestRun.id,
-          status: latestRun.automation_status,
-          hasResultData: !!latestRun.result_data,
-          resultDataType: typeof latestRun.result_data,
-          summary: latestRun.result_data?.summary?.substring(0, 50) + '...',
-        } : null,
-        isLoadingRun,
-      });
-    }
-    
-    // Debug: Check if summary exists
+    // Check if summary exists
     const hasSummary = summary && typeof summary === 'string' && summary.trim().length > 0;
     
     // Monitor when summary becomes available after execution
@@ -182,7 +177,7 @@ export default function Automations() {
                       className="gap-2"
                     >
                       <Eye className="h-4 w-4" />
-                      Ver más
+                      View More
                     </Button>
                   </div>
                 </>
@@ -203,72 +198,174 @@ export default function Automations() {
     );
   };
 
-  const renderAutomationCard = (automation: any, index: number) => (
-    <div
-      key={automation.id}
-      className="rounded-xl bg-card border border-border p-5 shadow-card animate-slide-up"
-      style={{ animationDelay: `${index * 100}ms` }}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <div
-            className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-lg",
-              automation.is_active ? "bg-primary/10" : "bg-muted"
-            )}
-          >
-            {automation.is_active ? (
-              <Play className="h-5 w-5 text-primary" />
-            ) : (
-              <Pause className="h-5 w-5 text-muted-foreground" />
-            )}
+  // Component for Email/Communication automation cards (needs to be separate to use hooks)
+  const AutomationCard = ({ automation, index }: { automation: any; index: number }) => {
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const { toast } = useToast();
+    const deleteAutomation = useDeleteAutomation();
+
+    // Extract email_send_date from config
+    // Config can be a string (JSON) or an object
+    let config = automation.config || {};
+    if (typeof config === 'string') {
+      try {
+        config = JSON.parse(config);
+      } catch (e) {
+        console.error('Error parsing config:', e);
+        config = {};
+      }
+    }
+    const emailSendDate = config.email_send_date;
+    
+    // Format the date for display
+    let formattedDate = null;
+    if (emailSendDate) {
+      try {
+        const date = new Date(emailSendDate);
+        if (!isNaN(date.getTime())) {
+          formattedDate = date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+        }
+      } catch (e) {
+        console.error('Error parsing date:', e);
+      }
+    }
+
+    const handleDelete = async () => {
+      try {
+        const id = automation.automation_id || automation.id;
+        if (!id) {
+          toast({
+            title: "Error",
+            description: "Could not identify the automation",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        await deleteAutomation.mutateAsync(id);
+        toast({
+          title: "Automation deleted",
+          description: `${automation.name} has been deleted successfully.`,
+        });
+        setDeleteDialogOpen(false);
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to delete automation",
+          variant: "destructive",
+        });
+      }
+    };
+
+    return (
+      <div
+        className="rounded-xl bg-card border border-border p-5 shadow-card animate-slide-up"
+        style={{ animationDelay: `${index * 100}ms` }}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-lg",
+                automation.is_active ? "bg-primary/10" : "bg-muted"
+              )}
+            >
+              {automation.is_active ? (
+                <Play className="h-5 w-5 text-primary" />
+              ) : (
+                <Pause className="h-5 w-5 text-muted-foreground" />
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium text-foreground">{automation.name}</h3>
+              </div>
+              {automation.description && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  {automation.description}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-2 mt-3">
+                <span className="inline-flex items-center px-2 py-1 rounded-md bg-secondary text-xs text-muted-foreground">
+                  {actionLabels[automation.action_type] || automation.action_type}
+                </span>
+                {formattedDate && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-primary/10 text-xs text-primary">
+                    <Calendar className="h-3 w-3" />
+                    {formattedDate}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="font-medium text-foreground">{automation.name}</h3>
-            </div>
-            {automation.description && (
-              <p className="text-sm text-muted-foreground mt-1">
-                {automation.description}
-              </p>
-            )}
-            <div className="flex flex-wrap gap-2 mt-3">
-              <span className="inline-flex items-center px-2 py-1 rounded-md bg-secondary text-xs text-muted-foreground">
-                {actionLabels[automation.action_type] || automation.action_type}
-              </span>
-            </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleExecute(automation)}
+              disabled={!automation.is_active || executeAutomation.isPending}
+              className="gap-2"
+            >
+              {executeAutomation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Running...
+                </>
+              ) : (
+                <>
+                  <Play className="h-4 w-4" />
+                  Run Now
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDeleteDialogOpen(true)}
+              className="gap-2 text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+            <Switch
+              checked={automation.is_active || false}
+              onCheckedChange={() =>
+                toggleAutomation(automation.id, automation.is_active || false)
+              }
+            />
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleExecute(automation)}
-            disabled={!automation.is_active || executeAutomation.isPending}
-            className="gap-2"
-          >
-            {executeAutomation.isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Running...
-              </>
-            ) : (
-              <>
-                <Play className="h-4 w-4" />
-                Run Now
-              </>
-            )}
-          </Button>
-          <Switch
-            checked={automation.is_active || false}
-            onCheckedChange={() =>
-              toggleAutomation(automation.id, automation.is_active || false)
-            }
-          />
-        </div>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete{" "}
+                <strong>{automation.name}</strong> and all associated data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={deleteAutomation.isPending}
+              >
+                {deleteAutomation.isPending ? "Deleting..." : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen">
@@ -312,7 +409,9 @@ export default function Automations() {
                 <p className="text-xs mt-1">Create email or meeting follow-up automations</p>
               </div>
             ) : (
-              otherAutomations.map((automation, index) => renderAutomationCard(automation, index))
+              otherAutomations.map((automation, index) => (
+                <AutomationCard key={automation.id} automation={automation} index={index} />
+              ))
             )}
           </div>
         </section>

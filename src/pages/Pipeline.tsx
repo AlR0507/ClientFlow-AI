@@ -26,7 +26,7 @@ const stageConfig = [
 
 export default function Pipeline() {
   const [addDealOpen, setAddDealOpen] = useState(false);
-  const [selectedStage, setSelectedStage] = useState("Lead");
+  const [selectedStage, setSelectedStage] = useState("New");
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [draggedDealId, setDraggedDealId] = useState<string | null>(null);
@@ -137,7 +137,7 @@ export default function Pipeline() {
               <p className="text-2xl font-semibold text-foreground">{deals.length}</p>
             </div>
           </div>
-          <Button className="gap-2" onClick={() => handleAddDeal("Lead")}>
+          <Button className="gap-2" onClick={() => handleAddDeal("New")}>
             <Plus className="h-4 w-4" />
             Add Deal
           </Button>
@@ -230,7 +230,7 @@ export default function Pipeline() {
                               }}
                             >
                               <Eye className="mr-2 h-4 w-4" />
-                              Ver más
+                              View More
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -247,6 +247,11 @@ export default function Pipeline() {
                               {deal.clients.name}
                             </p>
                           </div>
+                        )}
+                        {deal.description && (
+                          <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                            {deal.description}
+                          </p>
                         )}
                       </div>
 

@@ -59,7 +59,7 @@ export default function EmailConfirmation() {
     } catch (error: any) {
       console.error("Error resending email:", error);
       // Mostrar error al usuario
-      alert(`Error al reenviar el correo: ${error.message || "Error desconocido"}`);
+      alert(`Error resending email: ${error.message || "Unknown error"}`);
     } finally {
       setIsResending(false);
     }
