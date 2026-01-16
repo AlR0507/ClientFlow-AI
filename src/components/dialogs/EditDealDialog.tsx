@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -42,6 +43,7 @@ export function EditDealDialog({
     amount: "",
     stage: "New",
     priority: "medium",
+    description: "",
   });
 
   useEffect(() => {
@@ -52,6 +54,7 @@ export function EditDealDialog({
         amount: deal.amount?.toString() || "",
         stage: deal.stage || "New",
         priority: deal.priority || "medium",
+        description: deal.description || "",
       });
     }
   }, [deal, open]);
@@ -80,6 +83,7 @@ export function EditDealDialog({
         client_id: formData.clientId && formData.clientId !== "__none__" ? formData.clientId : null,
         stage: formData.stage,
         priority: formData.priority,
+        description: formData.description || null,
       });
 
       toast({
@@ -161,6 +165,19 @@ export function EditDealDialog({
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="edit-deal-description">Description</Label>
+              <Textarea
+                id="edit-deal-description"
+                placeholder="Add details about this deal..."
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                rows={4}
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-deal-stage">Stage *</Label>
@@ -179,25 +196,6 @@ export function EditDealDialog({
                     <SelectItem value="Follow-up">Follow-up</SelectItem>
                     <SelectItem value="Negotiating">Negotiating</SelectItem>
                     <SelectItem value="Closed">Closed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-deal-priority">Priority</Label>
-                <Select
-                  value={formData.priority}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, priority: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

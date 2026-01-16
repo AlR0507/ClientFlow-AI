@@ -30,7 +30,7 @@ interface AddDealDialogProps {
   defaultClientId?: string;
 }
 
-export function AddDealDialog({ open, onOpenChange, defaultStage = "Lead", defaultClientId }: AddDealDialogProps) {
+export function AddDealDialog({ open, onOpenChange, defaultStage = "New", defaultClientId }: AddDealDialogProps) {
   const { toast } = useToast();
   const { data: clients = [] } = useClients();
   const createDeal = useCreateDeal();
@@ -38,6 +38,7 @@ export function AddDealDialog({ open, onOpenChange, defaultStage = "Lead", defau
     clientId: "",
     title: "",
     amount: "",
+    description: "",
   });
 
   // Set default client ID when dialog opens
@@ -78,6 +79,7 @@ export function AddDealDialog({ open, onOpenChange, defaultStage = "Lead", defau
         client_id: formData.clientId || null,
         stage: defaultStage,
         priority: "medium",
+        description: formData.description || null,
       });
 
       console.log("Deal created successfully:", result);
@@ -91,6 +93,7 @@ export function AddDealDialog({ open, onOpenChange, defaultStage = "Lead", defau
         clientId: "",
         title: "",
         amount: "",
+        description: "",
       });
       onOpenChange(false);
     } catch (error: any) {
@@ -163,6 +166,17 @@ export function AddDealDialog({ open, onOpenChange, defaultStage = "Lead", defau
                 type="number"
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Add details about this deal..."
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={4}
               />
             </div>
           </div>

@@ -157,14 +157,20 @@ export function ClientDetailDialog({
                   </div>
                 </div>
 
-                {client.notes && (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Notes</p>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">
-                      {client.notes}
-                    </p>
+                <div className="flex items-start gap-3 pt-2">
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground mb-2">Notes</p>
+                    {client.notes ? (
+                      <p className="text-sm text-foreground whitespace-pre-wrap bg-card p-3 rounded-md border border-border min-h-[80px]">
+                        {client.notes}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic bg-card p-3 rounded-md border border-border min-h-[80px] flex items-center">
+                        No notes available
+                      </p>
+                    )}
                   </div>
-                )}
+                </div>
 
                 <div className="flex items-center gap-3">
                   <Calendar className="h-4 w-4 text-muted-foreground" />

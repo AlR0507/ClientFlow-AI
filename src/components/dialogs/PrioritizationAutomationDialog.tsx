@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,6 +7,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -14,10 +24,13 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { useClients, type Client } from "@/hooks/useClients";
+import { useDeals } from "@/hooks/useDeals";
 import { useCreatePrioritization, calculateFinalPriority } from "@/hooks/usePrioritization";
 import { analyzeImageWithOpenAI } from "@/lib/openai-pdf-analyzer";
-import { Loader2, Search, Building2, Mail, ArrowLeft, Image as ImageIcon, X } from "lucide-react";
+import { Loader2, Search, Building2, Mail, ArrowLeft, Image as ImageIcon, X, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface PrioritizationAutomationDialogProps {
   open: boolean;
@@ -34,15 +47,37 @@ export function PrioritizationAutomationDialog({
   onOpenChange,
 }: PrioritizationAutomationDialogProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const { data: clients = [], isLoading } = useClients();
+  const { data: deals = [] } = useDeals();
   const createPrioritization = useCreatePrioritization();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnalyzingPDF, setIsAnalyzingPDF] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"continue" | "submit" | null>(null);
+  const [hasExistingPrioritization, setHasExistingPrioritization] = useState(false);
   
-  const [activeDeals, setActiveDeals] = useState<ActiveDealsOption | "">("");
+  // Calculate active deals count for selected client
+  const activeDealsCount = useMemo(() => {
+    if (!selectedClient) return 0;
+    const clientDeals = deals.filter((deal: any) => {
+      const dealClientId = deal.client_id || deal.clients?.id || (deal as any).clients?.client_id;
+      return String(dealClientId) === String(selectedClient.id) && deal.stage !== "Closed";
+    });
+    return clientDeals.length;
+  }, [selectedClient, deals]);
+
+  // Convert count to ActiveDealsOption format
+  const activeDeals: ActiveDealsOption = useMemo(() => {
+    if (activeDealsCount === 0) return "1"; // Default to "1" if no deals
+    if (activeDealsCount === 1) return "1";
+    if (activeDealsCount === 2) return "2";
+    return "3+"; // 3 or more
+  }, [activeDealsCount]);
+
   const [interactionFrequency, setInteractionFrequency] = useState<FrequencyOption | "">("");
   const [showOptionalForm, setShowOptionalForm] = useState(false);
   
@@ -55,7 +90,6 @@ export function PrioritizationAutomationDialog({
   // Reset form when dialog closes
   useEffect(() => {
     if (!open) {
-      setActiveDeals("");
       setInteractionFrequency("");
       setSelectedClient(null);
       setShowForm(false);
@@ -64,6 +98,9 @@ export function PrioritizationAutomationDialog({
       setWhoInitiated("");
       setPendingProposal("");
       setUploadedFile(null);
+      setShowWarningDialog(false);
+      setPendingAction(null);
+      setHasExistingPrioritization(false);
     }
   }, [open]);
 
@@ -74,40 +111,93 @@ export function PrioritizationAutomationDialog({
       (client.company && client.company.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const handleClientSelect = (client: Client) => {
+  // Check if client has existing prioritization
+  const checkExistingPrioritization = async (clientId: string): Promise<boolean> => {
+    if (!user?.id) {
+      console.log("[Prioritization] No user ID, returning false");
+      return false;
+    }
+    try {
+      console.log("[Prioritization] Checking for existing prioritization for client:", clientId, "user:", user.id);
+      
+      // Try multiple query approaches
+      // Approach 1: Query all prioritizations for this user and filter client-side
+      const { data: allPrioritizations, error: allError } = await (supabase as any)
+        .from("client_prioritizations")
+        .select("id, client_id, user_id");
+      
+      console.log("[Prioritization] All prioritizations query:", { data: allPrioritizations, error: allError });
+      
+      if (allPrioritizations && Array.isArray(allPrioritizations)) {
+        const matching = allPrioritizations.find((p: any) => 
+          String(p.client_id) === String(clientId) && String(p.user_id) === String(user.id)
+        );
+        if (matching) {
+          console.log("[Prioritization] Found existing prioritization via all query:", matching);
+          return true;
+        }
+      }
+      
+      // Approach 2: Direct query with client_id
+      const { data, error } = await (supabase as any)
+        .from("client_prioritizations")
+        .select("id, client_id, user_id")
+        .eq("client_id", clientId);
+      
+      console.log("[Prioritization] Direct query result:", { data, error });
+      
+      if (error) {
+        console.log("[Prioritization] Error details:", {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        
+        // PGRST116 = no rows returned (this is expected when no prioritization exists)
+        if (error.code === "PGRST116" || error.message?.includes("No rows") || error.message?.includes("0 rows")) {
+          console.log("[Prioritization] No existing prioritization found (expected)");
+          return false;
+        }
+      }
+      
+      if (data && Array.isArray(data) && data.length > 0) {
+        // Check if any of the results match the current user
+        const userMatch = data.find((p: any) => String(p.user_id) === String(user.id));
+        if (userMatch) {
+          console.log("[Prioritization] Found existing prioritization:", userMatch);
+          return true;
+        }
+      }
+      
+      console.log("[Prioritization] No existing prioritization found");
+      return false;
+    } catch (error) {
+      console.error("[Prioritization] Exception checking prioritization:", error);
+      return false;
+    }
+  };
+
+  const handleClientSelect = async (client: Client) => {
     setSelectedClient(client);
     setShowForm(true);
+    // Check if client has existing prioritization
+    const hasExisting = await checkExistingPrioritization(client.id);
+    setHasExistingPrioritization(hasExisting);
   };
 
   const handleBackToClientSelection = () => {
     setShowForm(false);
     setShowOptionalForm(false);
     setSelectedClient(null);
-    setActiveDeals("");
     setInteractionFrequency("");
     setWhoInitiated("");
     setPendingProposal("");
     setUploadedFile(null);
   };
 
-  const handleContinue = async () => {
-    if (!selectedClient) {
-      toast({
-        title: "Cliente no seleccionado",
-        description: "Por favor selecciona un cliente primero.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!activeDeals || !interactionFrequency) {
-      toast({
-        title: "Campos requeridos",
-        description: "Por favor selecciona una opción en cada pregunta.",
-        variant: "destructive",
-      });
-      return;
-    }
+  const executeContinue = async () => {
+    if (!selectedClient) return;
 
     setIsSubmitting(true);
 
@@ -127,15 +217,15 @@ export function PrioritizationAutomationDialog({
       });
 
       toast({
-        title: "Priorización guardada",
-        description: `La priorización para ${selectedClient.name} ha sido configurada exitosamente. Prioridad: ${calculatedPriority}.`,
+        title: "Prioritization saved",
+        description: `Prioritization for ${selectedClient.name} has been configured successfully. Priority: ${calculatedPriority}.`,
       });
 
       onOpenChange(false);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "No se pudo guardar la priorización",
+        description: error.message || "Failed to save prioritization",
         variant: "destructive",
       });
     } finally {
@@ -143,8 +233,38 @@ export function PrioritizationAutomationDialog({
     }
   };
 
-  const handleActiveDealsChange = (value: string) => {
-    setActiveDeals(value as ActiveDealsOption);
+  const handleContinue = async () => {
+    if (!selectedClient) {
+      toast({
+        title: "Client not selected",
+        description: "Please select a client first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!interactionFrequency) {
+      toast({
+        title: "Required fields",
+        description: "Please select an option for the interaction frequency question.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if client has existing prioritization
+    const hasExisting = await checkExistingPrioritization(selectedClient.id);
+    console.log("[Prioritization] handleContinue - hasExisting:", hasExisting);
+    setHasExistingPrioritization(hasExisting);
+
+    if (hasExisting) {
+      console.log("[Prioritization] Showing warning dialog");
+      setPendingAction("continue");
+      setShowWarningDialog(true);
+    } else {
+      console.log("[Prioritization] No existing prioritization, proceeding directly");
+      executeContinue();
+    }
   };
 
   const handleFrequencyChange = (value: string) => {
@@ -166,8 +286,8 @@ export function PrioritizationAutomationDialog({
       const validImageTypes = ["image/jpeg", "image/jpg", "image/png"];
       if (!validImageTypes.includes(file.type)) {
         toast({
-          title: "Tipo de archivo inválido",
-          description: "Por favor sube solo archivos de imagen (JPG, JPEG o PNG).",
+          title: "Invalid file type",
+          description: "Please upload only image files (JPG, JPEG or PNG).",
           variant: "destructive",
         });
         return;
@@ -176,26 +296,8 @@ export function PrioritizationAutomationDialog({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!selectedClient) {
-      toast({
-        title: "Cliente no seleccionado",
-        description: "Por favor selecciona un cliente primero.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!activeDeals || !interactionFrequency) {
-      toast({
-        title: "Campos requeridos",
-        description: "Por favor selecciona una opción en cada pregunta.",
-        variant: "destructive",
-      });
-      return;
-    }
+  const executeSubmit = async () => {
+    if (!selectedClient) return;
 
     setIsSubmitting(true);
 
@@ -215,14 +317,14 @@ export function PrioritizationAutomationDialog({
           pdfSentiment = analysis.sentiment;
 
           toast({
-            title: "Imagen analizada",
-            description: `Análisis completado: ${analysis.keywordsCount} keywords, sentimiento ${analysis.sentiment}, prioridad ${analysis.priority}.`,
+            title: "Image analyzed",
+            description: `Analysis completed: ${analysis.keywordsCount} keywords, sentiment ${analysis.sentiment}, priority ${analysis.priority}.`,
           });
         } catch (imageError: any) {
           console.error("Error analyzing image:", imageError);
           toast({
-            title: "Advertencia",
-            description: `No se pudo analizar la imagen: ${imageError.message}. Continuando sin análisis de imagen.`,
+            title: "Warning",
+            description: `Could not analyze image: ${imageError.message}. Continuing without image analysis.`,
             variant: "default",
           });
         } finally {
@@ -255,15 +357,15 @@ export function PrioritizationAutomationDialog({
       });
 
       toast({
-        title: "Priorización guardada",
-        description: `La priorización para ${selectedClient.name} ha sido configurada exitosamente. Prioridad final: ${calculatedPriority}.`,
+        title: "Prioritization saved",
+        description: `Prioritization for ${selectedClient.name} has been configured successfully. Final priority: ${calculatedPriority}.`,
       });
 
       onOpenChange(false);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "No se pudo guardar la priorización",
+        description: error.message || "Failed to save prioritization",
         variant: "destructive",
       });
     } finally {
@@ -271,17 +373,64 @@ export function PrioritizationAutomationDialog({
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedClient) {
+      toast({
+        title: "Client not selected",
+        description: "Please select a client first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!interactionFrequency) {
+      toast({
+        title: "Required fields",
+        description: "Please select an option for the interaction frequency question.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if client has existing prioritization
+    const hasExisting = await checkExistingPrioritization(selectedClient.id);
+    console.log("[Prioritization] handleSubmit - hasExisting:", hasExisting);
+    setHasExistingPrioritization(hasExisting);
+
+    if (hasExisting) {
+      console.log("[Prioritization] Showing warning dialog");
+      setPendingAction("submit");
+      setShowWarningDialog(true);
+    } else {
+      console.log("[Prioritization] No existing prioritization, proceeding directly");
+      executeSubmit();
+    }
+  };
+
+  const handleConfirmWarning = () => {
+    setShowWarningDialog(false);
+    if (pendingAction === "continue") {
+      executeContinue();
+    } else if (pendingAction === "submit") {
+      executeSubmit();
+    }
+    setPendingAction(null);
+  };
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {showForm ? "Automatizar Priorización" : "Seleccionar Cliente"}
+            {showForm ? "Automate Prioritization" : "Select Client"}
           </DialogTitle>
           <DialogDescription>
             {showForm
-              ? `Configura las reglas para automatizar la priorización de ${selectedClient?.name}`
-              : "Elige un cliente para automatizar su priorización"}
+              ? `Configure the rules to automate prioritization for ${selectedClient?.name}`
+              : "Choose a client to automate their prioritization"}
           </DialogDescription>
         </DialogHeader>
 
@@ -292,7 +441,7 @@ export function PrioritizationAutomationDialog({
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar cliente..."
+                placeholder="Search client..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -307,7 +456,7 @@ export function PrioritizationAutomationDialog({
                 ))
               ) : filteredClients.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">
-                  <p className="text-sm">No se encontraron clientes</p>
+                  <p className="text-sm">No clients found</p>
                 </div>
               ) : (
                 filteredClients.map((client) => (
@@ -345,7 +494,7 @@ export function PrioritizationAutomationDialog({
 
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
+                Cancel
               </Button>
             </DialogFooter>
           </div>
@@ -373,44 +522,24 @@ export function PrioritizationAutomationDialog({
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-foreground">Required</h3>
 
-              {/* First Question */}
+              {/* Active Deals Display (Read-only) */}
               <div className="space-y-3">
                 <Label className="text-base font-medium text-foreground">
-                  Number of active deals with the client: * 
+                  Number of active deals with the client:
                 </Label>
-                <RadioGroup
-                  value={activeDeals}
-                  onValueChange={handleActiveDealsChange}
-                  className="space-y-2 pl-1"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="1" id="deal-1" />
-                    <Label
-                      htmlFor="deal-1"
-                      className="text-sm font-normal cursor-pointer"
-                    >
-                      1 deal
-                    </Label>
+                <div className="p-3 rounded-lg bg-secondary/50 border border-border">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Active deals count:</span>
+                    <span className="text-lg font-semibold text-foreground">
+                      {activeDealsCount} {activeDealsCount === 1 ? "deal" : "deals"}
+                    </span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="2" id="deal-2" />
-                    <Label
-                      htmlFor="deal-2"
-                      className="text-sm font-normal cursor-pointer"
-                    >
-                      2 deals
-                    </Label>
+                  <div className="mt-2 pt-2 border-t border-border">
+                    <span className="text-xs text-muted-foreground">
+                      This value will be used for prioritization calculation (weight: {activeDeals === "1" ? "1 deal" : activeDeals === "2" ? "2 deals" : "3+ deals"})
+                    </span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="3+" id="deal-3+" />
-                    <Label
-                      htmlFor="deal-3+"
-                      className="text-sm font-normal cursor-pointer"
-                    >
-                      3+ deals
-                    </Label>
-                  </div>
-                </RadioGroup>
+                </div>
               </div>
 
               {/* Second Question */}
@@ -471,7 +600,7 @@ export function PrioritizationAutomationDialog({
                 disabled={isSubmitting}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Volver
+                Back
               </Button>
               <Button
                 type="button"
@@ -479,7 +608,7 @@ export function PrioritizationAutomationDialog({
                 onClick={() => setShowOptionalForm(true)}
                 disabled={isSubmitting}
               >
-                Configuración opcional
+                Optional Settings
               </Button>
               <Button
                 type="button"
@@ -487,7 +616,7 @@ export function PrioritizationAutomationDialog({
                 disabled={isSubmitting || createPrioritization.isPending}
               >
                 {(isSubmitting || createPrioritization.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Continuar
+                Continue
               </Button>
             </DialogFooter>
           </div>
@@ -633,7 +762,7 @@ export function PrioritizationAutomationDialog({
                 disabled={isSubmitting}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Volver
+                Back
               </Button>
               <Button
                 type="button"
@@ -641,16 +770,50 @@ export function PrioritizationAutomationDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
               >
-                Cancelar
+                Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting || isAnalyzingPDF || createPrioritization.isPending}>
                 {(isSubmitting || isAnalyzingPDF || createPrioritization.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isAnalyzingPDF ? "Analizando imagen..." : "Guardar"}
+                {isAnalyzingPDF ? "Analyzing image..." : "Save"}
               </Button>
             </DialogFooter>
           </form>
         )}
       </DialogContent>
     </Dialog>
+
+    {/* Warning Dialog for existing prioritization - Outside main Dialog */}
+    <AlertDialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-warning/10">
+              <AlertTriangle className="h-5 w-5 text-warning" />
+            </div>
+            <div>
+              <AlertDialogTitle>Update existing prioritization?</AlertDialogTitle>
+              <AlertDialogDescription className="mt-2">
+                This client already has a prioritization configured. If you continue, the previous information will be replaced by the new configuration.
+              </AlertDialogDescription>
+            </div>
+          </div>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => {
+            setPendingAction(null);
+            setShowWarningDialog(false);
+          }}>
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleConfirmWarning}
+            className="bg-warning text-warning-foreground hover:bg-warning/90"
+          >
+            Continue and update
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

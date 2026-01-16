@@ -44,9 +44,9 @@ export function SelectClientDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Seleccionar Cliente</DialogTitle>
+          <DialogTitle>Select Client</DialogTitle>
           <DialogDescription>
-            Elige un cliente para automatizar su priorización
+            Choose a client to automate their prioritization
           </DialogDescription>
         </DialogHeader>
 
@@ -55,7 +55,7 @@ export function SelectClientDialog({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Buscar cliente..."
+              placeholder="Search client..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -70,7 +70,7 @@ export function SelectClientDialog({
               ))
             ) : filteredClients.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
-                <p className="text-sm">No se encontraron clientes</p>
+                <p className="text-sm">No clients found</p>
               </div>
             ) : (
               filteredClients.map((client) => (
@@ -109,7 +109,7 @@ export function SelectClientDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
+            Cancel
           </Button>
         </DialogFooter>
       </DialogContent>

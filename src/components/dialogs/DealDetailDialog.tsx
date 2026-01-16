@@ -25,6 +25,7 @@ import {
   Calendar,
   User,
   TrendingUp,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -139,21 +140,6 @@ export function DealDetailDialog({
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Priority</p>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-xs capitalize mt-1",
-                        priorityColors[deal.priority || "medium"] || priorityColors.medium
-                      )}
-                    >
-                      {deal.priority || "medium"}
-                    </Badge>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-sm text-muted-foreground">Created</p>
@@ -164,6 +150,21 @@ export function DealDetailDialog({
                 </div>
               </div>
             </div>
+
+            {/* Description Section */}
+            {deal.description && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-foreground">Description</h3>
+                <div className="p-4 rounded-lg bg-secondary/50">
+                  <div className="flex items-start gap-3">
+                    <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                    <p className="text-sm text-foreground whitespace-pre-wrap">
+                      {deal.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-2 pt-4 border-t border-border">
