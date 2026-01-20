@@ -99,13 +99,15 @@ export function DealDetailDialog({
           <div className="space-y-6">
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-foreground">Basic Information</h3>
-              <div className="grid gap-4 p-4 rounded-lg bg-secondary/50">
+              <h3 className="text-lg font-semibold text-foreground mb-3">Basic Information</h3>
+              <div className="grid gap-4 p-5 rounded-xl bg-gradient-to-br from-secondary/60 to-secondary/30 border border-border/60 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                    <DollarSign className="h-5 w-5 text-primary" />
+                  </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Amount</p>
-                    <p className="font-medium text-foreground">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Amount</p>
+                    <p className="font-bold text-foreground text-lg mt-0.5">
                       ${(deal.amount || 0).toLocaleString()}
                     </p>
                   </div>
@@ -113,10 +115,12 @@ export function DealDetailDialog({
 
                 {dealClient && (
                   <div className="flex items-center gap-3">
-                    <User className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                      <User className="h-5 w-5 text-primary" />
+                    </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Client</p>
-                      <p className="font-medium text-foreground">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Client</p>
+                      <p className="font-semibold text-foreground mt-0.5">
                         {dealClient.name || "—"}
                       </p>
                     </div>
@@ -124,13 +128,15 @@ export function DealDetailDialog({
                 )}
 
                 <div className="flex items-center gap-3">
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                  </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Stage</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Stage</p>
                     <Badge
                       variant="outline"
                       className={cn(
-                        "text-xs capitalize mt-1",
+                        "text-xs capitalize font-medium px-2.5 py-1",
                         stageColors[deal.stage] || stageColors.New
                       )}
                     >
@@ -140,10 +146,12 @@ export function DealDetailDialog({
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                    <Calendar className="h-5 w-5 text-primary" />
+                  </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Created</p>
-                    <p className="font-medium text-foreground">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Created</p>
+                    <p className="font-semibold text-foreground mt-0.5">
                       {format(new Date(deal.created_at), "MMM dd, yyyy")}
                     </p>
                   </div>
@@ -154,11 +162,13 @@ export function DealDetailDialog({
             {/* Description Section */}
             {deal.description && (
               <div className="space-y-4">
-                <h3 className="font-semibold text-foreground">Description</h3>
-                <div className="p-4 rounded-lg bg-secondary/50">
+                <h3 className="text-lg font-semibold text-foreground mb-3">Description</h3>
+                <div className="p-5 rounded-xl bg-gradient-to-br from-secondary/60 to-secondary/30 border border-border/60 shadow-sm">
                   <div className="flex items-start gap-3">
-                    <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <p className="text-sm text-foreground whitespace-pre-wrap">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
+                      <FileText className="h-5 w-5 text-primary" />
+                    </div>
+                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                       {deal.description}
                     </p>
                   </div>
@@ -167,10 +177,10 @@ export function DealDetailDialog({
             )}
 
             {/* Actions */}
-            <div className="flex gap-2 pt-4 border-t border-border">
+            <div className="flex gap-3 pt-4 border-t border-border/60">
               <Button
                 variant="outline"
-                className="flex-1 gap-2"
+                className="flex-1 gap-2 transition-all hover:bg-primary/10 hover:border-primary/30"
                 onClick={() => setEditDialogOpen(true)}
               >
                 <Edit className="h-4 w-4" />
@@ -178,7 +188,7 @@ export function DealDetailDialog({
               </Button>
               <Button
                 variant="destructive"
-                className="flex-1 gap-2"
+                className="flex-1 gap-2 shadow-sm hover:shadow-md transition-all"
                 onClick={() => setDeleteDialogOpen(true)}
               >
                 <Trash2 className="h-4 w-4" />

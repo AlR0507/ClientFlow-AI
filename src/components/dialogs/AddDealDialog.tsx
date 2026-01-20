@@ -108,18 +108,18 @@ export function AddDealDialog({ open, onOpenChange, defaultStage = "New", defaul
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Deal</DialogTitle>
+          <DialogTitle className="text-2xl">Add New Deal</DialogTitle>
           <DialogDescription>
-            Create a new deal. It will be added to the "{defaultStage}" stage. Required fields are marked with *.
+            Create a new deal. It will be added to the <span className="font-medium text-foreground">"{defaultStage}"</span> stage. Required fields are marked with *.
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid gap-5">
             <div className="space-y-2">
-              <Label htmlFor="client">Select Client</Label>
+              <Label htmlFor="client" className="text-sm font-medium">Select Client</Label>
               <Select
                 value={formData.clientId}
                 onValueChange={(value) => {
@@ -127,7 +127,7 @@ export function AddDealDialog({ open, onOpenChange, defaultStage = "New", defaul
                   setFormData({ ...formData, clientId: value });
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="border-border/60 focus:border-primary/50 transition-colors">
                   <SelectValue placeholder="Choose a client (optional)" />
                 </SelectTrigger>
                 <SelectContent>
@@ -149,43 +149,46 @@ export function AddDealDialog({ open, onOpenChange, defaultStage = "New", defaul
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="title">Deal Name *</Label>
+              <Label htmlFor="title" className="text-sm font-medium">Deal Name *</Label>
               <Input
                 id="title"
                 placeholder="Enterprise License"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="border-border/60 focus:border-primary/50 transition-colors"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="amount">Deal Amount *</Label>
+              <Label htmlFor="amount" className="text-sm font-medium">Deal Amount *</Label>
               <Input
                 id="amount"
                 placeholder="10000"
                 type="number"
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                className="border-border/60 focus:border-primary/50 transition-colors"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description" className="text-sm font-medium">Description</Label>
               <Textarea
                 id="description"
                 placeholder="Add details about this deal..."
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={4}
+                className="border-border/60 focus:border-primary/50 transition-colors resize-none"
               />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="gap-2 pt-4 border-t border-border/60">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="transition-all">
               Cancel
             </Button>
-            <Button type="submit" disabled={createDeal.isPending}>
+            <Button type="submit" disabled={createDeal.isPending} className="shadow-sm hover:shadow-md transition-all">
               {createDeal.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Deal
             </Button>

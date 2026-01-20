@@ -422,9 +422,9 @@ export function PrioritizationAutomationDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-2xl">
             {showForm ? "Automate Prioritization" : "Select Client"}
           </DialogTitle>
           <DialogDescription>
@@ -436,53 +436,59 @@ export function PrioritizationAutomationDialog({
 
         {!showForm ? (
           // Client Selection View
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               <Input
-                placeholder="Search client..."
+                placeholder="Search client by name, email, or company..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="pl-9 border-border/60 focus:border-primary/50 transition-colors"
               />
             </div>
 
             {/* Clients List */}
-            <div className="max-h-[400px] overflow-y-auto space-y-2">
+            <div className="max-h-[450px] overflow-y-auto space-y-2 scrollbar-thin">
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-16 w-full" />
+                  <Skeleton key={i} className="h-20 w-full rounded-xl" />
                 ))
               ) : filteredClients.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground">
-                  <p className="text-sm">No clients found</p>
+                <div className="p-12 text-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <Building2 className="h-12 w-12 text-muted-foreground/40" />
+                    <p className="text-sm font-medium text-foreground">No clients found</p>
+                    <p className="text-xs text-muted-foreground">
+                      {searchQuery ? "Try adjusting your search" : "No clients available"}
+                    </p>
+                  </div>
                 </div>
               ) : (
                 filteredClients.map((client) => (
                   <button
                     key={client.id}
                     onClick={() => handleClientSelect(client)}
-                    className="w-full text-left p-3 rounded-lg border border-border hover:bg-secondary transition-colors"
+                    className="w-full text-left p-4 rounded-xl border border-border/60 hover:bg-secondary/70 hover:border-primary/30 hover:shadow-sm transition-all duration-200 group"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-sm">
-                        {client.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold text-sm shadow-sm transition-transform duration-200 group-hover:scale-110">
+                        {client.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground">{client.name}</p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <p className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">{client.name}</p>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
                           {client.company && (
-                            <>
-                              <Building2 className="h-3 w-3" />
-                              <span className="truncate">{client.company}</span>
-                            </>
+                            <span className="flex items-center gap-1.5">
+                              <Building2 className="h-3.5 w-3.5 text-primary/60" />
+                              <span className="truncate max-w-[150px]">{client.company}</span>
+                            </span>
                           )}
                           {client.email && (
-                            <>
-                              <Mail className="h-3 w-3 ml-2" />
-                              <span className="truncate">{client.email}</span>
-                            </>
+                            <span className="flex items-center gap-1.5">
+                              <Mail className="h-3.5 w-3.5 text-primary/60" />
+                              <span className="truncate max-w-[150px]">{client.email}</span>
+                            </span>
                           )}
                         </div>
                       </div>
@@ -492,8 +498,8 @@ export function PrioritizationAutomationDialog({
               )}
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <DialogFooter className="pt-4 border-t border-border/60">
+              <Button variant="outline" onClick={() => onOpenChange(false)} className="transition-all">
                 Cancel
               </Button>
             </DialogFooter>
@@ -503,15 +509,15 @@ export function PrioritizationAutomationDialog({
           <div className="space-y-6">
             {/* Selected Client Info */}
             {selectedClient && (
-              <div className="p-3 rounded-lg bg-secondary/50 border border-border">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-sm">
-                    {selectedClient.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+              <div className="p-4 rounded-xl bg-gradient-to-br from-secondary/60 to-secondary/30 border border-border/60 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold text-sm shadow-sm">
+                    {selectedClient.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground">{selectedClient.name}</p>
+                    <p className="font-semibold text-foreground text-base">{selectedClient.name}</p>
                     {selectedClient.email && (
-                      <p className="text-sm text-muted-foreground">{selectedClient.email}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">{selectedClient.email}</p>
                     )}
                   </div>
                 </div>
@@ -519,22 +525,22 @@ export function PrioritizationAutomationDialog({
             )}
 
             {/* Required Section */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground">Required</h3>
+            <div className="space-y-5">
+              <h3 className="text-base font-semibold text-foreground mb-1">Required</h3>
 
               {/* Active Deals Display (Read-only) */}
               <div className="space-y-3">
-                <Label className="text-base font-medium text-foreground">
+                <Label className="text-sm font-medium text-foreground">
                   Number of active deals with the client:
                 </Label>
-                <div className="p-3 rounded-lg bg-secondary/50 border border-border">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Active deals count:</span>
-                    <span className="text-lg font-semibold text-foreground">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Active deals count:</span>
+                    <span className="text-xl font-bold text-primary">
                       {activeDealsCount} {activeDealsCount === 1 ? "deal" : "deals"}
                     </span>
                   </div>
-                  <div className="mt-2 pt-2 border-t border-border">
+                  <div className="pt-3 border-t border-primary/20">
                     <span className="text-xs text-muted-foreground">
                       This value will be used for prioritization calculation (weight: {activeDeals === "1" ? "1 deal" : activeDeals === "2" ? "2 deals" : "3+ deals"})
                     </span>
@@ -544,46 +550,46 @@ export function PrioritizationAutomationDialog({
 
               {/* Second Question */}
               <div className="space-y-3">
-                <Label className="text-base font-medium text-foreground">
+                <Label className="text-sm font-medium text-foreground">
                   Interaction frequency last 14 days? *
                 </Label>
                 <RadioGroup
                   value={interactionFrequency}
                   onValueChange={handleFrequencyChange}
-                  className="space-y-2 pl-1"
+                  className="space-y-3 pl-1"
                 >
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/60 hover:bg-secondary/50 transition-colors cursor-pointer">
                     <RadioGroupItem value="1-2times" id="1-2times" />
                     <Label
                       htmlFor="1-2times"
-                      className="text-sm font-normal cursor-pointer"
+                      className="text-sm font-medium cursor-pointer flex-1"
                     >
                       1 - 2 times
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/60 hover:bg-secondary/50 transition-colors cursor-pointer">
                     <RadioGroupItem value="3-5times" id="3-5times" />
                     <Label
                       htmlFor="3-5times"
-                      className="text-sm font-normal cursor-pointer"
+                      className="text-sm font-medium cursor-pointer flex-1"
                     >
                       3 - 5 times
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/60 hover:bg-secondary/50 transition-colors cursor-pointer">
                     <RadioGroupItem value="6-9times" id="6-9times" />
                     <Label
                       htmlFor="6-9times"
-                      className="text-sm font-normal cursor-pointer"
+                      className="text-sm font-medium cursor-pointer flex-1"
                     >
                       6 - 9 times
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/60 hover:bg-secondary/50 transition-colors cursor-pointer">
                     <RadioGroupItem value="10+times" id="10+times" />
                     <Label
                       htmlFor="10+times"
-                      className="text-sm font-normal cursor-pointer"
+                      className="text-sm font-medium cursor-pointer flex-1"
                     >
                       +10 times
                     </Label>
@@ -592,12 +598,13 @@ export function PrioritizationAutomationDialog({
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="gap-2 pt-4 border-t border-border/60">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleBackToClientSelection}
                 disabled={isSubmitting}
+                className="transition-all"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
@@ -607,6 +614,7 @@ export function PrioritizationAutomationDialog({
                 variant="outline"
                 onClick={() => setShowOptionalForm(true)}
                 disabled={isSubmitting}
+                className="transition-all hover:bg-primary/10 hover:border-primary/30"
               >
                 Optional Settings
               </Button>
@@ -614,6 +622,7 @@ export function PrioritizationAutomationDialog({
                 type="button"
                 onClick={handleContinue}
                 disabled={isSubmitting || createPrioritization.isPending}
+                className="shadow-sm hover:shadow-md transition-all"
               >
                 {(isSubmitting || createPrioritization.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Continue
@@ -625,15 +634,15 @@ export function PrioritizationAutomationDialog({
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Selected Client Info */}
             {selectedClient && (
-              <div className="p-3 rounded-lg bg-secondary/50 border border-border">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-sm">
-                    {selectedClient.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+              <div className="p-4 rounded-xl bg-gradient-to-br from-secondary/60 to-secondary/30 border border-border/60 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold text-sm shadow-sm">
+                    {selectedClient.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground">{selectedClient.name}</p>
+                    <p className="font-semibold text-foreground text-base">{selectedClient.name}</p>
                     {selectedClient.email && (
-                      <p className="text-sm text-muted-foreground">{selectedClient.email}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">{selectedClient.email}</p>
                     )}
                   </div>
                 </div>
@@ -642,69 +651,65 @@ export function PrioritizationAutomationDialog({
 
             {/* Optional Section */}
             <div className="space-y-6">
-              <h3 className="text-sm font-semibold text-foreground">Optional:</h3>
+              <h3 className="text-base font-semibold text-foreground mb-1">Optional Settings</h3>
 
               {/* Advanced Settings */}
-              <div className="space-y-4">
-                <Label className="text-base font-medium text-foreground">
-                  Advanced settings.
-                </Label>
-
-              {/* Who initiated contact? */}
-              <div className="space-y-3 pl-1">
-                <Label className="text-sm font-medium text-foreground">
-                  Who initiated contact?
-                </Label>
-                <RadioGroup
-                  value={whoInitiated}
-                  onValueChange={handleWhoInitiatedChange}
-                  className="space-y-2 pl-1"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="client" id="client-initiated" />
-                    <Label
-                      htmlFor="client-initiated"
-                      className="text-sm font-normal cursor-pointer"
-                    >
-                      Client
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="you" id="you-initiated" />
-                    <Label
-                      htmlFor="you-initiated"
-                      className="text-sm font-normal cursor-pointer"
-                    >
-                      You
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
+              <div className="space-y-5 p-5 rounded-xl bg-gradient-to-br from-secondary/60 to-secondary/30 border border-border/60 shadow-sm">
+                {/* Who initiated contact? */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-foreground">
+                    Who initiated contact?
+                  </Label>
+                  <RadioGroup
+                    value={whoInitiated}
+                    onValueChange={handleWhoInitiatedChange}
+                    className="space-y-3"
+                  >
+                    <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/60 hover:bg-secondary/50 transition-colors cursor-pointer">
+                      <RadioGroupItem value="client" id="client-initiated" />
+                      <Label
+                        htmlFor="client-initiated"
+                        className="text-sm font-medium cursor-pointer flex-1"
+                      >
+                        Client
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/60 hover:bg-secondary/50 transition-colors cursor-pointer">
+                      <RadioGroupItem value="you" id="you-initiated" />
+                      <Label
+                        htmlFor="you-initiated"
+                        className="text-sm font-medium cursor-pointer flex-1"
+                      >
+                        You
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
 
                 {/* Pending proposal */}
-                <div className="space-y-3 pl-1">
+                <div className="space-y-3 pt-2 border-t border-border/60">
                   <Label className="text-sm font-medium text-foreground">
                     Is there any pending proposal between you and the client? (meeting, call, etc.)
                   </Label>
                   <RadioGroup
                     value={pendingProposal}
                     onValueChange={handlePendingProposalChange}
-                    className="space-y-2 pl-1"
+                    className="space-y-3"
                   >
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/60 hover:bg-secondary/50 transition-colors cursor-pointer">
                       <RadioGroupItem value="yes" id="pending-yes" />
                       <Label
                         htmlFor="pending-yes"
-                        className="text-sm font-normal cursor-pointer"
+                        className="text-sm font-medium cursor-pointer flex-1"
                       >
                         Yes
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-3 p-3 rounded-lg border border-border/60 hover:bg-secondary/50 transition-colors cursor-pointer">
                       <RadioGroupItem value="no" id="pending-no" />
                       <Label
                         htmlFor="pending-no"
-                        className="text-sm font-normal cursor-pointer"
+                        className="text-sm font-medium cursor-pointer flex-1"
                       >
                         No
                       </Label>
@@ -714,32 +719,36 @@ export function PrioritizationAutomationDialog({
               </div>
 
               {/* Upload Image */}
-              <div className="space-y-2">
-                <Label htmlFor="image-upload" className="text-base font-medium text-foreground">
-                  Upload image
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  NOTE: "Upload an image (JPG/PNG) with details about the client or conversation with client."
-                </p>
-                <div className="space-y-2">
+              <div className="space-y-3 p-5 rounded-xl bg-gradient-to-br from-secondary/60 to-secondary/30 border border-border/60 shadow-sm">
+                <div>
+                  <Label htmlFor="image-upload" className="text-sm font-medium text-foreground">
+                    Upload image
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    Upload an image (JPG/PNG) with details about the client or conversation with client.
+                  </p>
+                </div>
+                <div className="space-y-3">
                   <Input
                     id="image-upload"
                     type="file"
                     accept="image/jpeg,image/jpg,image/png"
                     onChange={handleFileChange}
-                    className="cursor-pointer"
+                    className="cursor-pointer border-border/60 focus:border-primary/50 transition-colors"
                   />
                   {uploadedFile && (
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/50 border border-border">
-                      <ImageIcon className="h-4 w-4 text-primary" />
-                      <span className="text-sm text-foreground flex-1 truncate">
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border/60 shadow-sm">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                        <ImageIcon className="h-5 w-5 text-primary" />
+                      </div>
+                      <span className="text-sm font-medium text-foreground flex-1 truncate">
                         {uploadedFile.name}
                       </span>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-6 px-2"
+                        className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive transition-all"
                         onClick={() => {
                           setUploadedFile(null);
                           const input = document.getElementById("image-upload") as HTMLInputElement;
@@ -754,12 +763,13 @@ export function PrioritizationAutomationDialog({
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="gap-2 pt-4 border-t border-border/60">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setShowOptionalForm(false)}
                 disabled={isSubmitting}
+                className="transition-all"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
@@ -769,10 +779,11 @@ export function PrioritizationAutomationDialog({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 disabled={isSubmitting}
+                className="transition-all"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting || isAnalyzingPDF || createPrioritization.isPending}>
+              <Button type="submit" disabled={isSubmitting || isAnalyzingPDF || createPrioritization.isPending} className="shadow-sm hover:shadow-md transition-all">
                 {(isSubmitting || isAnalyzingPDF || createPrioritization.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isAnalyzingPDF ? "Analyzing image..." : "Save"}
               </Button>
@@ -784,30 +795,30 @@ export function PrioritizationAutomationDialog({
 
     {/* Warning Dialog for existing prioritization - Outside main Dialog */}
     <AlertDialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
-      <AlertDialogContent>
+      <AlertDialogContent className="sm:max-w-[500px]">
         <AlertDialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-warning/10">
-              <AlertTriangle className="h-5 w-5 text-warning" />
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warning/10 shadow-sm flex-shrink-0">
+              <AlertTriangle className="h-6 w-6 text-warning" />
             </div>
-            <div>
-              <AlertDialogTitle>Update existing prioritization?</AlertDialogTitle>
-              <AlertDialogDescription className="mt-2">
+            <div className="flex-1">
+              <AlertDialogTitle className="text-xl mb-2">Update existing prioritization?</AlertDialogTitle>
+              <AlertDialogDescription className="text-sm leading-relaxed">
                 This client already has a prioritization configured. If you continue, the previous information will be replaced by the new configuration.
               </AlertDialogDescription>
             </div>
           </div>
         </AlertDialogHeader>
-        <AlertDialogFooter>
+        <AlertDialogFooter className="gap-2 pt-4 border-t border-border/60">
           <AlertDialogCancel onClick={() => {
             setPendingAction(null);
             setShowWarningDialog(false);
-          }}>
+          }} className="transition-all">
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirmWarning}
-            className="bg-warning text-warning-foreground hover:bg-warning/90"
+            className="bg-warning text-warning-foreground hover:bg-warning/90 shadow-sm hover:shadow-md transition-all"
           >
             Continue and update
           </AlertDialogAction>

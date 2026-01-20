@@ -105,25 +105,25 @@ export function EditDealDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Deal</DialogTitle>
+          <DialogTitle className="text-2xl">Edit Deal</DialogTitle>
           <DialogDescription>
             Update deal information. Required fields are marked with *.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid gap-5">
             <div className="space-y-2">
-              <Label htmlFor="edit-deal-client">Select Client</Label>
+              <Label htmlFor="edit-deal-client" className="text-sm font-medium">Select Client</Label>
               <Select
                 value={formData.clientId}
                 onValueChange={(value) => {
                   setFormData({ ...formData, clientId: value });
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className="border-border/60 focus:border-primary/50 transition-colors">
                   <SelectValue placeholder="Choose a client (optional)" />
                 </SelectTrigger>
                 <SelectContent>
@@ -141,7 +141,7 @@ export function EditDealDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-deal-title">Deal Name *</Label>
+              <Label htmlFor="edit-deal-title" className="text-sm font-medium">Deal Name *</Label>
               <Input
                 id="edit-deal-title"
                 placeholder="Enterprise License"
@@ -149,11 +149,12 @@ export function EditDealDialog({
                 onChange={(e) =>
                   setFormData({ ...formData, title: e.target.value })
                 }
+                className="border-border/60 focus:border-primary/50 transition-colors"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-deal-amount">Deal Amount *</Label>
+              <Label htmlFor="edit-deal-amount" className="text-sm font-medium">Deal Amount *</Label>
               <Input
                 id="edit-deal-amount"
                 placeholder="10000"
@@ -162,11 +163,12 @@ export function EditDealDialog({
                 onChange={(e) =>
                   setFormData({ ...formData, amount: e.target.value })
                 }
+                className="border-border/60 focus:border-primary/50 transition-colors"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-deal-description">Description</Label>
+              <Label htmlFor="edit-deal-description" className="text-sm font-medium">Description</Label>
               <Textarea
                 id="edit-deal-description"
                 placeholder="Add details about this deal..."
@@ -175,19 +177,20 @@ export function EditDealDialog({
                   setFormData({ ...formData, description: e.target.value })
                 }
                 rows={4}
+                className="border-border/60 focus:border-primary/50 transition-colors resize-none"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-deal-stage">Stage *</Label>
+                <Label htmlFor="edit-deal-stage" className="text-sm font-medium">Stage *</Label>
                 <Select
                   value={formData.stage}
                   onValueChange={(value) =>
                     setFormData({ ...formData, stage: value })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-border/60 focus:border-primary/50 transition-colors">
                     <SelectValue placeholder="Select stage" />
                   </SelectTrigger>
                   <SelectContent>
@@ -202,15 +205,16 @@ export function EditDealDialog({
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 pt-4 border-t border-border/60">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              className="transition-all"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={updateDeal.isPending}>
+            <Button type="submit" disabled={updateDeal.isPending} className="shadow-sm hover:shadow-md transition-all">
               {updateDeal.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}

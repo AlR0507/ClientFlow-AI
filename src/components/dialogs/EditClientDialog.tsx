@@ -90,72 +90,72 @@ export function EditClientDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Client Notes</DialogTitle>
+          <DialogTitle className="text-2xl">Edit Client Notes</DialogTitle>
           <DialogDescription>
-            Update notes for {client.name}. Only notes can be edited.
+            Update notes for <span className="font-medium text-foreground">{client.name}</span>. Only notes can be edited.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid gap-5">
             {/* Read-only fields */}
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Name</Label>
+              <Label htmlFor="edit-name" className="text-sm font-medium">Name</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
                 readOnly
-                className="bg-muted cursor-not-allowed"
+                className="bg-muted/50 cursor-not-allowed border-border/40"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-company">Company</Label>
+              <Label htmlFor="edit-company" className="text-sm font-medium">Company</Label>
               <Input
                 id="edit-company"
                 value={formData.company}
                 readOnly
-                className="bg-muted cursor-not-allowed"
+                className="bg-muted/50 cursor-not-allowed border-border/40"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-source">Source</Label>
+              <Label htmlFor="edit-source" className="text-sm font-medium">Source</Label>
               <Input
                 id="edit-source"
                 value={formData.source}
                 readOnly
-                className="bg-muted cursor-not-allowed capitalize"
+                className="bg-muted/50 cursor-not-allowed border-border/40 capitalize"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-email">Email</Label>
+                <Label htmlFor="edit-email" className="text-sm font-medium">Email</Label>
                 <Input
                   id="edit-email"
                   type="email"
                   value={formData.email || ""}
                   readOnly
-                  className="bg-muted cursor-not-allowed"
+                  className="bg-muted/50 cursor-not-allowed border-border/40"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-phone">Phone</Label>
+                <Label htmlFor="edit-phone" className="text-sm font-medium">Phone</Label>
                 <Input
                   id="edit-phone"
                   value={formData.phone || ""}
                   readOnly
-                  className="bg-muted cursor-not-allowed"
+                  className="bg-muted/50 cursor-not-allowed border-border/40"
                 />
               </div>
             </div>
 
             {/* Editable notes field */}
             <div className="space-y-2">
-              <Label htmlFor="edit-notes">Notes</Label>
+              <Label htmlFor="edit-notes" className="text-sm font-medium">Notes</Label>
               <Textarea
                 id="edit-notes"
                 placeholder="Add notes about this client..."
@@ -163,20 +163,22 @@ export function EditClientDialog({
                 onChange={(e) =>
                   setFormData({ ...formData, notes: e.target.value })
                 }
-                rows={5}
+                rows={6}
+                className="border-border/60 focus:border-primary/50 transition-colors resize-none"
               />
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 pt-4 border-t border-border/60">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              className="transition-all"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={updateClient.isPending}>
+            <Button type="submit" disabled={updateClient.isPending} className="shadow-sm hover:shadow-md transition-all">
               {updateClient.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}

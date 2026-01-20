@@ -85,7 +85,7 @@ export function ClientDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl">{client.name}</DialogTitle>
             <DialogDescription>
@@ -96,13 +96,15 @@ export function ClientDetailDialog({
           <div className="space-y-6">
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-foreground">Basic Information</h3>
-              <div className="grid gap-4 p-4 rounded-lg bg-secondary/50">
+              <h3 className="text-lg font-semibold text-foreground mb-3">Basic Information</h3>
+              <div className="grid gap-4 p-5 rounded-xl bg-gradient-to-br from-secondary/60 to-secondary/30 border border-border/60 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                    <Building2 className="h-5 w-5 text-primary" />
+                  </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Company</p>
-                    <p className="font-medium text-foreground">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Company</p>
+                    <p className="font-semibold text-foreground mt-0.5">
                       {client.company || "—"}
                     </p>
                   </div>
@@ -110,28 +112,32 @@ export function ClientDetailDialog({
 
                 {client.email && (
                   <div className="flex items-center gap-3">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                      <Mail className="h-5 w-5 text-primary" />
+                    </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Email</p>
-                      <p className="font-medium text-foreground">{client.email}</p>
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</p>
+                      <p className="font-semibold text-foreground mt-0.5">{client.email}</p>
                     </div>
                   </div>
                 )}
 
                 {client.phone && (
                   <div className="flex items-center gap-3">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                      <Phone className="h-5 w-5 text-primary" />
+                    </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Phone</p>
-                      <p className="font-medium text-foreground">{client.phone}</p>
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Phone</p>
+                      <p className="font-semibold text-foreground mt-0.5">{client.phone}</p>
                     </div>
                   </div>
                 )}
 
                 <div className="flex items-center gap-3">
                   <div>
-                    <p className="text-sm text-muted-foreground">Source</p>
-                    <p className="font-medium text-foreground capitalize">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Source</p>
+                    <p className="font-semibold text-foreground capitalize mt-0.5">
                       {client.source || "—"}
                     </p>
                   </div>
@@ -139,17 +145,17 @@ export function ClientDetailDialog({
 
                 <div className="flex items-center gap-3">
                   <div>
-                    <p className="text-sm text-muted-foreground">Status</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Status</p>
                     <Badge
                       variant="outline"
                       className={cn(
-                        "text-xs capitalize mt-1",
+                        "text-xs capitalize font-medium px-2.5 py-1",
                         client.status === "high" &&
                           "border-destructive/50 text-destructive bg-destructive/10",
                         client.status === "medium" &&
                           "border-warning/50 text-warning bg-warning/10",
                         client.status === "low" &&
-                          "border-muted-foreground/50 text-muted-foreground"
+                          "border-muted-foreground/50 text-muted-foreground bg-muted/30"
                       )}
                     >
                       {client.status || "medium"}
@@ -159,13 +165,13 @@ export function ClientDetailDialog({
 
                 <div className="flex items-start gap-3 pt-2">
                   <div className="flex-1">
-                    <p className="text-sm text-muted-foreground mb-2">Notes</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Notes</p>
                     {client.notes ? (
-                      <p className="text-sm text-foreground whitespace-pre-wrap bg-card p-3 rounded-md border border-border min-h-[80px]">
+                      <p className="text-sm text-foreground whitespace-pre-wrap bg-card p-4 rounded-lg border border-border/60 min-h-[100px] leading-relaxed">
                         {client.notes}
                       </p>
                     ) : (
-                      <p className="text-sm text-muted-foreground italic bg-card p-3 rounded-md border border-border min-h-[80px] flex items-center">
+                      <p className="text-sm text-muted-foreground italic bg-card p-4 rounded-lg border border-border/60 min-h-[100px] flex items-center">
                         No notes available
                       </p>
                     )}
@@ -173,10 +179,12 @@ export function ClientDetailDialog({
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                    <Calendar className="h-5 w-5 text-primary" />
+                  </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Created</p>
-                    <p className="font-medium text-foreground">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Created</p>
+                    <p className="font-semibold text-foreground mt-0.5">
                       {format(new Date(client.created_at), "MMM dd, yyyy")}
                     </p>
                   </div>
@@ -187,12 +195,12 @@ export function ClientDetailDialog({
             {/* Deals Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-foreground">
+                <h3 className="text-lg font-semibold text-foreground">
                   Deals ({clientDeals.length})
                 </h3>
                 <Button
                   size="sm"
-                  className="gap-2"
+                  className="gap-2 shadow-sm hover:shadow-md transition-all"
                   onClick={() => setAddDealDialogOpen(true)}
                 >
                   <Plus className="h-4 w-4" />
@@ -201,44 +209,50 @@ export function ClientDetailDialog({
               </div>
 
               {clientDeals.length === 0 ? (
-                <div className="p-8 text-center rounded-lg border border-dashed border-border bg-secondary/30">
-                  <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-sm font-medium text-foreground mb-1">
-                    No deals assigned
-                  </p>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Create a deal to start tracking opportunities with this client
-                  </p>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => setAddDealDialogOpen(true)}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Create First Deal
-                  </Button>
+                <div className="p-12 text-center rounded-xl border-2 border-dashed border-border/60 bg-secondary/20">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                      <DollarSign className="h-8 w-8 text-primary/50" />
+                    </div>
+                    <div>
+                      <p className="text-base font-semibold text-foreground mb-1">
+                        No deals assigned
+                      </p>
+                      <p className="text-sm text-muted-foreground mb-5">
+                        Create a deal to start tracking opportunities with this client
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-2 transition-all hover:bg-primary/10 hover:border-primary/30"
+                        onClick={() => setAddDealDialogOpen(true)}
+                      >
+                        <Plus className="h-4 w-4" />
+                        Create First Deal
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {clientDeals.map((deal: any) => (
                     <div
                       key={deal.id}
-                      className="p-4 rounded-lg border border-border bg-card hover:bg-secondary/50 transition-colors"
+                      className="p-5 rounded-xl border border-border/60 bg-card hover:bg-secondary/50 hover:shadow-sm transition-all duration-200 hover-lift"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="font-medium text-foreground mb-1">
+                          <p className="font-semibold text-foreground mb-2 text-base">
                             {deal.title}
                           </p>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <DollarSign className="h-3 w-3" />
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="flex items-center gap-1.5 font-semibold text-foreground">
+                              <DollarSign className="h-4 w-4 text-primary" />
                               ${deal.amount?.toLocaleString() || "0"}
                             </span>
                             <Badge
                               variant="outline"
-                              className="text-xs capitalize"
+                              className="text-xs capitalize font-medium px-2.5 py-1"
                             >
                               {deal.stage}
                             </Badge>
@@ -252,10 +266,10 @@ export function ClientDetailDialog({
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2 pt-4 border-t border-border">
+            <div className="flex gap-3 pt-4 border-t border-border/60">
               <Button
                 variant="outline"
-                className="flex-1 gap-2"
+                className="flex-1 gap-2 transition-all hover:bg-primary/10 hover:border-primary/30"
                 onClick={() => setEditDialogOpen(true)}
               >
                 <Edit className="h-4 w-4" />
@@ -263,7 +277,7 @@ export function ClientDetailDialog({
               </Button>
               <Button
                 variant="destructive"
-                className="flex-1 gap-2"
+                className="flex-1 gap-2 shadow-sm hover:shadow-md transition-all"
                 onClick={() => setDeleteDialogOpen(true)}
               >
                 <Trash2 className="h-4 w-4" />

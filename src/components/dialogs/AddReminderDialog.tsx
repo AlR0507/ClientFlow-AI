@@ -101,33 +101,34 @@ export function AddReminderDialog({ open, onOpenChange }: AddReminderDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add Reminder</DialogTitle>
+          <DialogTitle className="text-2xl">Add Reminder</DialogTitle>
           <DialogDescription>
             Set a reminder for a client follow-up. Required fields are marked with *.
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid gap-5">
             <div className="space-y-2">
-              <Label htmlFor="title">Reminder Title *</Label>
+              <Label htmlFor="title" className="text-sm font-medium">Reminder Title *</Label>
               <Input
                 id="title"
                 placeholder="Follow-up call with client"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="border-border/60 focus:border-primary/50 transition-colors"
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Reminder Type *</Label>
+              <Label className="text-sm font-medium">Reminder Type *</Label>
               <Select
                 value={formData.type}
                 onValueChange={(value) => setFormData({ ...formData, type: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="border-border/60 focus:border-primary/50 transition-colors">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -144,12 +145,12 @@ export function AddReminderDialog({ open, onOpenChange }: AddReminderDialogProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="client">Client</Label>
+              <Label htmlFor="client" className="text-sm font-medium">Client</Label>
               <Select
                 value={formData.clientId}
                 onValueChange={(value) => setFormData({ ...formData, clientId: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="border-border/60 focus:border-primary/50 transition-colors">
                   <SelectValue placeholder="Choose a client (optional)" />
                 </SelectTrigger>
                 <SelectContent>
@@ -164,32 +165,34 @@ export function AddReminderDialog({ open, onOpenChange }: AddReminderDialogProps
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="dueDate">Date *</Label>
+                <Label htmlFor="dueDate" className="text-sm font-medium">Date *</Label>
                 <Input
                   id="dueDate"
                   type="date"
                   value={formData.dueDate}
                   onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                  className="border-border/60 focus:border-primary/50 transition-colors"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="dueTime">Time *</Label>
+                <Label htmlFor="dueTime" className="text-sm font-medium">Time *</Label>
                 <Input
                   id="dueTime"
                   type="time"
                   value={formData.dueTime}
                   onChange={(e) => setFormData({ ...formData, dueTime: e.target.value })}
+                  className="border-border/60 focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Priority</Label>
+              <Label className="text-sm font-medium">Priority</Label>
               <Select
                 value={formData.priority}
                 onValueChange={(value) => setFormData({ ...formData, priority: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="border-border/60 focus:border-primary/50 transition-colors">
                   <SelectValue placeholder="Select priority" />
                 </SelectTrigger>
                 <SelectContent>
@@ -201,22 +204,23 @@ export function AddReminderDialog({ open, onOpenChange }: AddReminderDialogProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes" className="text-sm font-medium">Notes</Label>
               <Textarea
                 id="notes"
                 placeholder="Additional notes for this reminder..."
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                rows={2}
+                rows={3}
+                className="border-border/60 focus:border-primary/50 transition-colors resize-none"
               />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="gap-2 pt-4 border-t border-border/60">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="transition-all">
               Cancel
             </Button>
-            <Button type="submit" disabled={createReminder.isPending}>
+            <Button type="submit" disabled={createReminder.isPending} className="shadow-sm hover:shadow-md transition-all">
               {createReminder.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Reminder
             </Button>

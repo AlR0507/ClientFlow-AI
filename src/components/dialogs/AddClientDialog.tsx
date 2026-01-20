@@ -89,43 +89,45 @@ export function AddClientDialog({ open, onOpenChange }: AddClientDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Client</DialogTitle>
+          <DialogTitle className="text-2xl">Add New Client</DialogTitle>
           <DialogDescription>
             Create a new client profile. Required fields are marked with *.
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid gap-5">
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name" className="text-sm font-medium">Name *</Label>
               <Input
                 id="name"
                 placeholder="John Doe"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="border-border/60 focus:border-primary/50 transition-colors"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="company">Company *</Label>
+              <Label htmlFor="company" className="text-sm font-medium">Company *</Label>
               <Input
                 id="company"
                 placeholder="Acme Corporation"
                 value={formData.company}
                 onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                className="border-border/60 focus:border-primary/50 transition-colors"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="source">Source *</Label>
+              <Label htmlFor="source" className="text-sm font-medium">Source *</Label>
               <Select
                 value={formData.source}
                 onValueChange={(value) => setFormData({ ...formData, source: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="border-border/60 focus:border-primary/50 transition-colors">
                   <SelectValue placeholder="Select source" />
                 </SelectTrigger>
                 <SelectContent>
@@ -141,43 +143,46 @@ export function AddClientDialog({ open, onOpenChange }: AddClientDialogProps) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="john@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="border-border/60 focus:border-primary/50 transition-colors"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="phone" className="text-sm font-medium">Phone</Label>
                 <Input
                   id="phone"
                   placeholder="+1 555-0123"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="border-border/60 focus:border-primary/50 transition-colors"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Additional Notes</Label>
+              <Label htmlFor="notes" className="text-sm font-medium">Additional Notes</Label>
               <Textarea
                 id="notes"
                 placeholder="Any additional information about this client..."
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                rows={3}
+                rows={4}
+                className="border-border/60 focus:border-primary/50 transition-colors resize-none"
               />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="gap-2 pt-4 border-t border-border/60">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="transition-all">
               Cancel
             </Button>
-            <Button type="submit" disabled={createClient.isPending}>
+            <Button type="submit" disabled={createClient.isPending} className="shadow-sm hover:shadow-md transition-all">
               {createClient.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Client
             </Button>

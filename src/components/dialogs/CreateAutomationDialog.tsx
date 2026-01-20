@@ -229,9 +229,9 @@ export function CreateAutomationDialog({ open, onOpenChange }: CreateAutomationD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create Custom Automation</DialogTitle>
+          <DialogTitle className="text-2xl">Create Custom Automation</DialogTitle>
           <DialogDescription>
             Set up an automated workflow. Required fields are marked with *.
           </DialogDescription>
@@ -239,24 +239,25 @@ export function CreateAutomationDialog({ open, onOpenChange }: CreateAutomationD
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="name">Automation Name *</Label>
+              <Label htmlFor="name" className="text-sm font-medium">Automation Name *</Label>
               <Input
                 id="name"
                 placeholder="Welcome Email Flow"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="border-border/60 focus:border-primary/50 transition-colors"
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Action *</Label>
+              <Label className="text-sm font-medium">Action *</Label>
               <Select
                 value={actionType}
                 onValueChange={(value) => setActionType(value as ActionType)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="border-border/60 focus:border-primary/50 transition-colors">
                   <SelectValue placeholder="What should happen?" />
                 </SelectTrigger>
                 <SelectContent>
@@ -278,19 +279,19 @@ export function CreateAutomationDialog({ open, onOpenChange }: CreateAutomationD
 
           {/* Action-specific fields */}
           {actionType && (
-            <div className="space-y-4 p-4 rounded-lg bg-secondary/50 border border-border">
-              <h3 className="font-medium text-foreground text-sm">Action Configuration</h3>
+            <div className="space-y-5 p-5 rounded-xl bg-gradient-to-br from-secondary/60 to-secondary/30 border border-border/60 shadow-sm">
+              <h3 className="font-semibold text-foreground text-base mb-1">Action Configuration</h3>
               
               {/* Email Action */}
               {actionType === "email" && (
-                <div className="space-y-4">
+                <div className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="selectedClientEmail">Select Client *</Label>
+                    <Label htmlFor="selectedClientEmail" className="text-sm font-medium">Select Client *</Label>
                     <Select
                       value={formData.selectedClientId}
                       onValueChange={(value) => setFormData({ ...formData, selectedClientId: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="border-border/60 focus:border-primary/50 transition-colors">
                         <SelectValue placeholder="Choose a client" />
                       </SelectTrigger>
                       <SelectContent>
@@ -312,22 +313,24 @@ export function CreateAutomationDialog({ open, onOpenChange }: CreateAutomationD
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="emailMessage">Custom message to send *</Label>
+                    <Label htmlFor="emailMessage" className="text-sm font-medium">Custom message to send *</Label>
                     <Textarea
                       id="emailMessage"
                       placeholder="Write your email message here..."
                       value={formData.emailMessage}
                       onChange={(e) => setFormData({ ...formData, emailMessage: e.target.value })}
-                      rows={4}
+                      rows={5}
+                      className="border-border/60 focus:border-primary/50 transition-colors resize-none"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="emailSendDate">Date of sending *</Label>
+                    <Label htmlFor="emailSendDate" className="text-sm font-medium">Date of sending *</Label>
                     <Input
                       id="emailSendDate"
                       type="datetime-local"
                       value={formData.emailSendDate}
                       onChange={(e) => setFormData({ ...formData, emailSendDate: e.target.value })}
+                      className="border-border/60 focus:border-primary/50 transition-colors"
                     />
                   </div>
                 </div>
@@ -335,14 +338,14 @@ export function CreateAutomationDialog({ open, onOpenChange }: CreateAutomationD
 
               {/* AI Client Summary Action */}
               {actionType === "ai-summary" && (
-                <div className="space-y-4">
+                <div className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="selectedClient">Select Client *</Label>
+                    <Label htmlFor="selectedClient" className="text-sm font-medium">Select Client *</Label>
                     <Select
                       value={formData.selectedClientId}
                       onValueChange={(value) => setFormData({ ...formData, selectedClientId: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="border-border/60 focus:border-primary/50 transition-colors">
                         <SelectValue placeholder="Choose a client" />
                       </SelectTrigger>
                       <SelectContent>
@@ -361,8 +364,8 @@ export function CreateAutomationDialog({ open, onOpenChange }: CreateAutomationD
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-                    <p className="text-sm text-foreground">
+                  <div className="p-4 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 shadow-sm">
+                    <p className="text-sm text-foreground leading-relaxed">
                       <Zap className="h-4 w-4 inline mr-2 text-primary" />
                       AI will automatically generate a summary of client interactions, preferences, and next steps.
                     </p>
@@ -374,21 +377,22 @@ export function CreateAutomationDialog({ open, onOpenChange }: CreateAutomationD
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description" className="text-sm font-medium">Description</Label>
             <Textarea
               id="description"
               placeholder="Brief description of what this automation does..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={2}
+              rows={3}
+              className="border-border/60 focus:border-primary/50 transition-colors resize-none"
             />
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="gap-2 pt-4 border-t border-border/60">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="transition-all">
               Cancel
             </Button>
-            <Button type="submit" disabled={createAutomation.isPending}>
+            <Button type="submit" disabled={createAutomation.isPending} className="shadow-sm hover:shadow-md transition-all">
               {createAutomation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Automation
             </Button>
