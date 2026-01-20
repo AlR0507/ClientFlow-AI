@@ -43,9 +43,9 @@ export function PriorityClients() {
 
   if (clientsLoading) {
     return (
-      <div className="rounded-xl bg-card border border-border p-5 shadow-card animate-slide-up">
-        <div className="flex items-center justify-between mb-4">
-          <Skeleton className="h-5 w-40" />
+      <div className="rounded-xl bg-card border border-border/60 p-6 shadow-card animate-slide-up">
+        <div className="flex items-center justify-between mb-6">
+          <Skeleton className="h-6 w-40" />
           <Skeleton className="h-4 w-32" />
         </div>
         <div className="space-y-3">
@@ -59,34 +59,34 @@ export function PriorityClients() {
 
   if (priorityClients.length === 0) {
     return (
-      <div className="rounded-xl bg-card border border-border p-5 shadow-card animate-slide-up">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-foreground">AI Priority Clients</h3>
-          <span className="text-xs text-muted-foreground">Sorted by priority</span>
+      <div className="rounded-xl bg-card border border-border/60 p-6 shadow-card animate-slide-up hover:shadow-elevated transition-shadow duration-300">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-foreground">AI Priority Clients</h3>
+          <span className="text-xs text-muted-foreground uppercase tracking-wide">Sorted by priority</span>
         </div>
-        <div className="p-8 text-center text-muted-foreground">
-          <p className="text-sm">No clients yet. Add your first client to get started.</p>
+        <div className="p-12 text-center">
+          <p className="text-sm text-muted-foreground">No clients yet. Add your first client to get started.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl bg-card border border-border p-5 shadow-card animate-slide-up">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-foreground">AI Priority Clients</h3>
-        <span className="text-xs text-muted-foreground">Sorted by priority</span>
+    <div className="rounded-xl bg-card border border-border/60 p-6 shadow-card animate-slide-up hover:shadow-elevated transition-shadow duration-300">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold text-foreground">AI Priority Clients</h3>
+        <span className="text-xs text-muted-foreground uppercase tracking-wide">Sorted by priority</span>
       </div>
       <div className="space-y-3">
         {priorityClients.map((client, index) => (
           <div
             key={client.id}
             onClick={() => handleClientClick(client.id)}
-            className="flex items-center gap-4 p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors cursor-pointer"
-            style={{ animationDelay: `${index * 100}ms` }}
+            className="group flex items-center gap-4 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/80 transition-all duration-200 cursor-pointer hover:shadow-sm animate-fade-in hover-lift"
+            style={{ animationDelay: `${index * 80}ms` }}
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-sm">
-              {client.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold text-sm shadow-sm transition-transform duration-200 group-hover:scale-110">
+              {client.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">{client.name}</p>
@@ -106,10 +106,10 @@ export function PriorityClients() {
             <Badge
               variant="outline"
               className={cn(
-                "text-xs capitalize",
+                "text-xs capitalize font-medium px-2.5 py-1",
                 client.priority === "high" && "border-destructive/50 text-destructive bg-destructive/10",
                 client.priority === "medium" && "border-warning/50 text-warning bg-warning/10",
-                client.priority === "low" && "border-muted-foreground/50 text-muted-foreground"
+                client.priority === "low" && "border-muted-foreground/50 text-muted-foreground bg-muted/30"
               )}
             >
               {client.priority}
